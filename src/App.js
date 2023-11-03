@@ -49,14 +49,14 @@ function App() {
   return (
     <React.Fragment>
       <section>
-        <button onClick={fetchMovies}>Fetch Movies</button>
+        <button onClick={() => { setCancel(false); fetchMovies() }}>Fetch Movies</button>
       </section>
       <section>
         {!isLoading && !cancel && movies.length > 0 && <MoviesList movies={movies} />}
         {isLoading && !cancel && <p>Loading....</p>}
         {!isLoading && error && <p>{error}</p>}
         {cancel && <p>Fetching cancelled</p>}
-        <button onClick={() => setCancel(true)}>Cancel Fetch</button>
+        {!cancel && <button onClick={() => setCancel(true)}>Cancel Fetch</button>}
       </section>
     </React.Fragment>
   );
