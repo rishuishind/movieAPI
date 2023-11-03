@@ -3,7 +3,7 @@ import React, { useCallback, useEffect } from 'react';
 import MoviesList from './components/MoviesList';
 import './App.css';
 import { useState } from 'react';
-import MovieAddForm from './components/MovieAddForm';
+import MovieAddForm from './components/AddMovie';
 
 function App() {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,28 +15,24 @@ function App() {
     if (!cancel) {
       setIsLoading(true);
       try {
-        const response = await fetch('https://swapi.dev/api/films');
+        const response = await fetch('https://react-http-96a9c-default-rtdb.firebaseio.com/movies.json');
         if (!response.ok) {
           throw new Error('something went wrong ...Retrying');
         }
         const data = await response.json();
-        const newdata = data.results.map((movieData) => {
-          return {
-            id: movieData.episode_id,
-            title: movieData.title,
-            openingText: movieData.opening_crawl,
-            releaseDate: movieData.release_date
-          }
-        })
-        setMovies(newdata);
+        const loadedMovies = [];
+        for (const key in data) {
+          loadedMovies.push({
+            id: key,
+            title: data[key].title,
+            openingText: data[key].openingText,
+            releaseDate: data[key].releaseDate
+          })
+        }
+        setMovies(loadedMovies);
       }
       catch (error) {
         setError(error.message);
-        if (!cancel) {
-          setTimeout(() => {
-            fetchMovies();
-          }, 5000)
-        }
       }
 
       setIsLoading(false);
@@ -47,16 +43,28 @@ function App() {
     fetchMovies();
   }, [fetchMovies])
 
+  const AddMovieHandler = async (movie) => {
+    const response = await fetch('https://react-http-96a9c-default-rtdb.firebaseio.com/movies.json', {
+      method: 'POST',
+      body: JSON.stringify(movie),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await response.json();
+    console.log(data.name);
+  }
+
   return (
     <React.Fragment>
       <section>
-        <MovieAddForm />
+        <MovieAddForm onAddMovie={AddMovieHandler} />
       </section>
       <section>
         <button onClick={() => { setCancel(false); fetchMovies() }}>Fetch Movies</button>
       </section>
       <section>
-        {!isLoading && !cancel && movies.length > 0 && <MoviesList movies={movies} />}
+        {!isLoading && !cancel && movies.length > 0 && <MoviesList onAdd={fetchMovies} movies={movies} />}
         {isLoading && !cancel && <p>Loading....</p>}
         {!isLoading && error && <p>{error}</p>}
         {cancel && <p>Fetching cancelled</p>}
